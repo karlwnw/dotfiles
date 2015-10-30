@@ -63,4 +63,4 @@
         enabled = 0
 [core]
 	pager = less -F -X
-	editor = nano
+	editor = nano -r 72
