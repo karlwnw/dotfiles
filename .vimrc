@@ -1,20 +1,66 @@
+" disable vi compat
 set nocompatible
+" show line numbers
 set number
+" improve smoothness
+set ttyfast
 
-" Set utf8 as standard encoding and en_US as the standard language
+" Set utf8 as standard encoding
 set encoding=utf8
 
 " Use Unix as the standard file type
 set ffs=unix,dos,mac
 
 " Sets how many lines of history VIM has to remember
-set history=700
+set history=10000
 
 " Set to auto read when a file is changed from the outside
-set autoread
+" Might decrease VIM responsiveness
+" set autoread
 
-" Ignore case when searching
-set ignorecase
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Files, backups and undo
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Turn backup off, since most stuff is in git anyway...
+set nobackup
+set nowb
+set noswapfile
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Text, tab and indent related
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Use spaces instead of tabs
+set expandtab
+
+set ai "Auto indent
+set si "Smart indent
+
+set shiftwidth=4 " The # of spaces for indenting
+set tabstop=4 " 1 tab == 4 spaces
+set softtabstop=4
+set smarttab " At start of line, <Tab> inserts shiftwidth spaces, <Bs> deletes shiftwidth spaces
+
+set ignorecase " Ignore case when searching
+set smartcase " Ignore 'ignorecase' if search patter contains uppercase characters
+
+
+""""""""""""""""""""""""""""""
+" => Status line
+""""""""""""""""""""""""""""""
+" Always show the status line
+set laststatus=2
+
+" Format the status line
+"set statusline=%t\ %{fugitive#statusline()}
+
+
+"set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:␣
+"set list
+
+" Enable mouse click/scroll in all modes
+set mouse=a
 
 " Highlight search results
 set hlsearch
@@ -28,8 +74,36 @@ set showmatch
 "Always show current position
 set ruler
 
-" Turn on the WiLd menu
+set title " Show the filename in the window titlebar
+
+" Open new splits to right and bottom
+set splitbelow
+set splitright
+
+" easier splits switch shortcuts
+map <C-j> <C-W>j
+map <C-k> <C-W>k
+map <C-h> <C-W>h
+map <C-l> <C-W>l
+
+let mapleader = ','
+let g:mapleader = ','
+
+" Fast saving
+nmap <leader>w :w!<cr>
+
+" bind k to grep word under cursor
+nmap <leader>k :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
+
+" Turn on the Wild menu
 set wildmenu
+set wildignore+=.DS_Store
+set wildignore+=*/node_modules/*
+set wildignore+=*/.git/*,*/.hg/*,*/.svn/*
+set wildignore+=*/.sass-cache/*,*/log/*,*/tmp/*,*/doc/*,*/source_maps/*,*/dist/*,*/build/*
+
+" Set the working directory to wherever the open file lives
+" set autochdir
 
 " No annoying sound on errors
 set noerrorbells
@@ -39,46 +113,64 @@ set tm=500
 
 " Enable syntax highlighting
 syntax enable
-
-colorscheme desert
 set background=dark
+"let g:solarized_termcolors=256
+colorscheme molokai
 
 highlight ColorColumn ctermbg=DarkGrey
 set colorcolumn=120
 
 augroup vimrc_autocmds
+    " Clear all autocmds in the group
     autocmd!
+
     " highlight characters past column 120
     autocmd FileType python highlight Excess ctermbg=lightred guibg=Black
     autocmd FileType python match Excess /\%120v.*/
     autocmd FileType python set nowrap
-    augroup END
+
+    " Jump to last cursor position unless it's invalid or in an event handler
+    autocmd BufReadPost *
+        \ if line("'\"") > 0 && line("'\"") <= line("$") |
+        \   exe "normal g`\"" |
+        \ endif
+
+augroup END
 
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Files, backups and undo
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Turn backup off, since most stuff is in SVN, git et.c anyway...
-set nobackup
-set nowb
-set noswapfile
+
+" Strip trailing whitespace on save
+function! StripWhitespace()
+    let save_cursor = getpos(".")
+    let old_query = getreg('/')
+    :%s/\s\+$//e
+    call setpos('.', save_cursor)
+    call setreg('/', old_query)
+endfunction
+
+if has("autocmd")
+    autocmd BufWritePre *.txt,*.js,*.py,*.wiki,*.sh,*.coffee :call StripWhitespace()
+endif
 
 
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" => Text, tab and indent related
-"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Use spaces instead of tabs
-set expandtab
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" SHORTCUT TO REFERENCE CURRENT FILE'S PATH IN COMMAND LINE MODE
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+cnoremap <expr> %% expand('%:h').'/'
 
-" Be smart when using tabs ;)
-set smarttab
-
-" 1 tab == 4 spaces
-set shiftwidth=4
-set tabstop=4
-
-set ai "Auto indent
-set si "Smart indent
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" RENAME CURRENT FILE
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+function! RenameFile()
+    let old_name = expand('%')
+    let new_name = input('New file name: ', expand('%'), 'file')
+    if new_name != '' && new_name != old_name
+        exec ':saveas ' . new_name
+        exec ':silent !rm ' . old_name
+        redraw!
+    endif
+endfunction
+map <leader>n :call RenameFile()<cr>
 
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -89,25 +181,15 @@ map j gj
 map k gk
 
 " Map <Space> to / (search) and Ctrl-<Space> to ? (backwards search)
-map <space> /
-map <c-space> ?
+"map <space> /
+"map <c-space> ?
 
-
-""""""""""""""""""""""""""""""
-" => Status line
-""""""""""""""""""""""""""""""
-" Always show the status line
-set laststatus=2
-
-" Format the status line
-"set statusline=%t\ %{fugitive#statusline()}
-
-
-"execute pathogen#infect()
 
 silent! nmap <C-t> :NERDTreeToggle<CR>
 " ignore .pyc files in the tree
 let NERDTreeIgnore = ['\.pyc$']
+
+let g:netrw_list_hide= '.*\.pyc'
 
 " ignore files in ctrlp search
 let g:ctrlp_custom_ignore = {
@@ -118,6 +200,91 @@ let g:ctrlp_custom_ignore = {
 
 "autocmd FileType python map <buffer> <F3> :call Flake8()<CR>
 
-" disable jedi docstring popup
-let g:jedi#show_call_signatures = "0"
-autocmd FileType python setlocal completeopt-=preview
+" Jedi-vim
+let g:jedi#popup_on_dot=0
+let g:jedi#show_call_signatures=0
+"let g:jedi#auto_vim_configuration=0
+autocmd FileType python setlocal completeopt-=preview " disable the docstring window during completion
+
+
+" Plugins (with vim.plug) -------------------------------------------------------------
+
+" Load plugins
+call plug#begin('~/.vim/plugged')
+
+Plug 'ctrlpvim/ctrlp.vim'
+Plug 'scrooloose/nerdtree'
+Plug 'airblade/vim-gitgutter'
+Plug 'pangloss/vim-javascript'
+Plug 'davidhalter/jedi-vim'
+Plug 'tpope/vim-surround'
+Plug 'vim-scripts/mru.vim'
+Plug 'terryma/vim-expand-region'
+
+Plug 'altercation/vim-colors-solarized'
+Plug 'morhetz/gruvbox'
+Plug 'tomasr/molokai'
+" Plug 'tpope/vim-fugitive'
+
+call plug#end()
+
+
+" Plugin Configuration  -------------------------------------------------------------
+
+" gitgutter faster refresh
+set updatetime=250
+
+" Ctrl+N to toggle NERDTree
+map <C-n> :NERDTreeToggle %<CR>
+" reveal current file in tree
+nmap <leader>r :NERDTreeFind "@%"<CR>
+
+" CtrlP.vim {{{
+augroup ctrlp_config
+  autocmd!
+  let g:ctrlp_clear_cache_on_exit = 0 " Do not clear filenames cache, to improve CtrlP startup
+  "let g:ctrlp_lazy_update = 350 " Set delay to prevent extra search
+  let g:ctrlp_match_window_bottom = 0 " Show at top of window
+  let g:ctrlp_max_files = 0 " Set no file limit, we are building a big project
+  let g:ctrlp_switch_buffer = 'Et' " Jump to tab AND buffer if already open
+  let g:ctrlp_open_new_file = 'r' " Open newly created files in the current window
+  let g:ctrlp_open_multiple_files = 'ij' " Open multiple files in hidden buffers, and jump to the first one
+augroup END
+" }}}
+
+
+" MRU {{{
+augroup mru_config
+  autocmd!
+  "let MRU_File = ~/.vim/plugged/mru.vim/.vim_mru_files
+  let MRU_Max_Entries = 50
+  let MRU_Include_Files = '\.py$\|\.html|\.js|\.coffee'
+  nmap <leader>e :MRU<CR>
+augroup END
+
+" }}}
+
+
+" Silver Searcher {{{
+augroup ag_config
+  autocmd!
+
+  if executable("ag")
+    " Note we extract the column as well as the file and line number
+    set grepprg=ag\ --nogroup\ --nocolor\ --column
+    set grepformat=%f:%l:%c%m
+
+    " Have the silver searcher ignore all the same things as wilgignore
+    let b:ag_command = 'ag %s -i --nocolor --nogroup'
+
+    for i in split(&wildignore, ",")
+      let i = substitute(i, '\*/\(.*\)/\*', '\1', 'g')
+      let b:ag_command = b:ag_command . ' --ignore "' . substitute(i, '\*/\(.*\)/\*', '\1', 'g') . '"'
+    endfor
+
+    let b:ag_command = b:ag_command . ' --hidden -g ""'
+    let g:ctrlp_user_command = b:ag_command
+    let g:ctrlp_use_caching = 0
+  endif
+augroup END
+" }}}
