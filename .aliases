@@ -1,5 +1,6 @@
 # Network
 alias wifiinfo="/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I"
+alias wifiname='wifiinfo | grep "[^B]SSID" | awk -F'\''SSID: '\'' '\''{print $2}'\'''
 
 alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
 alias localip="ipconfig getifaddr en0"
