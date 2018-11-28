@@ -5,9 +5,16 @@ function md() {
     mkdir -p "$@" && cd "$@"
 }
 
-# Print wifi password for a given SSID
+# Print the wifi password (current connected wifi is no SSID provided)
+# Requires the alias "wifiname"
 function wifipassword() {
-    security find-generic-password -ga $1 | grep password
+  if [ $# -eq 0 ]
+    then
+      ssid="$(wifiname)"
+    else
+      ssid=$1
+  fi
+  security find-generic-password -ga $ssid | grep "password:"
 }
 
 # Extract archives - use: extract <file>
