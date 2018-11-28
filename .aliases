@@ -10,6 +10,9 @@ alias speedtest="wget -O /dev/null http://speed.transip.nl/100mb.bin"
 alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
 alias canary='/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
 
+# VSCode
+alias vscode='/Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code'
+
 # VLC
 alias vlc='/Applications/VLC.app/Contents/MacOS/VLC'
 
