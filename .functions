@@ -17,6 +17,16 @@ function wifipassword() {
   security find-generic-password -ga $ssid | grep "password:"
 }
 
+# Get or set mouse tracking speed
+function mousespeed() {
+  if [ $# -eq 0 ]
+    then
+      defaults read -g com.apple.mouse.scaling
+    else
+      defaults write -g com.apple.mouse.scaling $1
+  fi
+}
+
 # Extract archives - use: extract <file>
 # Credits to http://dotfiles.org/~pseup/.bashrc
 function extract() {
