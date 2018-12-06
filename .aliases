@@ -1,6 +1,9 @@
 # Network
 alias wifiinfo="/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport -I"
 alias wifiname='wifiinfo | grep "[^B]SSID" | awk -F'\''SSID: '\'' '\''{print $2}'\'''
+# this is like clicking the (GUI) Wi-Fi icon and selecting "turn off Wi-Fi"
+alias wifioff='networksetup -setairportpower en0 off'
+alias wifion='networksetup -setairportpower en0 on'
 
 alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
 alias localip="ipconfig getifaddr en0"
