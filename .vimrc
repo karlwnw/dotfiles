@@ -59,8 +59,9 @@ set laststatus=2
 "set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:␣
 "set list
 
-" Enable mouse click/scroll in all modes
-set mouse=a
+" Enable mouse click/scroll in insert mode
+" Keep mouse select and copy in normal mode
+set mouse=i
 
 " Highlight search results
 set hlsearch
@@ -80,6 +81,15 @@ set title " Show the filename in the window titlebar
 set splitbelow
 set splitright
 
+" Use the clipboard as the default register
+set clipboard^=unnamed,unnamedplus
+
+" Habitual backspace behavior
+set backspace=indent,eol,start
+
+" Quick quit Shift + Q
+map Q :q<CR>
+
 " easier splits switch shortcuts
 map <C-j> <C-W>j
 map <C-k> <C-W>k
@@ -94,6 +104,9 @@ nmap <leader>w :w!<cr>
 
 " bind k to grep word under cursor
 nmap <leader>k :grep! "\b<C-R><C-W>\b"<CR>:cw<CR>
+
+" toggle line numbers (to copy text without line numbers)
+map <leader>l :set invnumber<cr>
 
 " Turn on the Wild menu
 set wildmenu
@@ -115,9 +128,11 @@ set tm=500
 syntax enable
 set background=dark
 "let g:solarized_termcolors=256
-colorscheme molokai
+"colorscheme molokai
+"colorscheme grb256
+colorscheme gruvbox
 
-highlight ColorColumn ctermbg=DarkGrey
+"highlight ColorColumn ctermbg=DarkGrey
 set colorcolumn=120
 
 augroup vimrc_autocmds
@@ -172,6 +187,41 @@ function! RenameFile()
 endfunction
 map <leader>n :call RenameFile()<cr>
 
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" Dotted path for Django/Python
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+function! PythonGetLabel()
+    if foldlevel('.') != 0
+        norm! zo
+    endif
+    let originalline = getpos('.')
+    let lnlist = [] 
+    let lastlineindent = indent(line('.'))
+    let objregexp = "^\\s*\\(class\\|def\\)\\s\\+[^:]\\+\\s*:"
+    if match(getline('.'),objregexp) != -1
+        let lastlineindent = indent(line('.'))
+        norm! ^wye
+        call insert(lnlist, @0, 0)
+    endif
+    while line('.') > 1
+        if indent('.') < lastlineindent
+            if match(getline('.'),objregexp) != -1
+                let lastlineindent = indent(line('.'))
+                norm! ^wye
+                call insert(lnlist, @0, 0)
+            endif
+        endif
+        norm! k
+    endwhile
+    let pathlist =  split(expand('%:r'), '/')
+    echo 'Python label: ' join(pathlist + lnlist, '.')
+    let @0 = join(pathlist + lnlist, '.')
+    let @+ = @0
+    call setpos('.', originalline)
+endfunction
+
+nnoremap <leader>p :call PythonGetLabel()<CR>
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Moving around, tabs, windows and buffers
@@ -184,6 +234,12 @@ map k gk
 "map <space> /
 "map <c-space> ?
 
+" Fix weird behavior inside tmux session
+" @see https://stackoverflow.com/a/6988748
+map OA <up>
+map OB <down>
+map OC <right>
+map OD <left>
 
 silent! nmap <C-t> :NERDTreeToggle<CR>
 " ignore .pyc files in the tree
@@ -258,7 +314,7 @@ augroup mru_config
   autocmd!
   "let MRU_File = ~/.vim/plugged/mru.vim/.vim_mru_files
   let MRU_Max_Entries = 50
-  let MRU_Include_Files = '\.py$\|\.html|\.js|\.coffee'
+  "let MRU_Include_Files = '\.py$\|\.html$\|\.js$\|\.coffee$'
   nmap <leader>e :MRU<CR>
 augroup END
 
