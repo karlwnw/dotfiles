@@ -56,8 +56,8 @@ set laststatus=2
 "set statusline=%t\ %{fugitive#statusline()}
 
 
-"set listchars=eol:¬,tab:>·,trail:~,extends:>,precedes:<,space:␣
-"set list
+set listchars=tab:>·,trail:.,extends:>,precedes:<,space:.
+set list
 
 " Enable mouse click/scroll in insert mode
 " Keep mouse select and copy in normal mode
@@ -89,6 +89,9 @@ set backspace=indent,eol,start
 
 " Quick quit Shift + Q
 map Q :q<CR>
+
+" Disable search highlighting
+nnoremap <silent> <Esc><Esc> :nohlsearch<CR><Esc>
 
 " easier splits switch shortcuts
 map <C-j> <C-W>j
@@ -152,6 +155,44 @@ augroup vimrc_autocmds
 
 augroup END
 
+augroup python
+    " Highlight python self keyword
+    " https://vi.stackexchange.com/a/8773
+    autocmd!
+    autocmd FileType python
+                \   syn keyword pythonSelf self
+                \ | highlight def link pythonSelf Special
+augroup end
+
+" Dim inactive windows using 'colorcolumn' setting
+" This tends to slow down redrawing, but is very useful.
+" Based on https://groups.google.com/d/msg/vim_use/IJU-Vk-QLJE/xz4hjPjCRBUJ
+" XXX: this will only work with lines containing text (i.e. not '~')
+function! s:DimInactiveWindows()
+  " Credits: https://stackoverflow.com/a/12519572
+  for i in range(1, tabpagewinnr(tabpagenr(), '$'))
+    let l:range = ""
+    if i != winnr()
+      if &wrap
+        " HACK: when wrapping lines is enabled, we use the maximum number
+        " of columns getting highlighted. This might get calculated by
+        " looking for the longest visible line and using a multiple of
+        " winwidth().
+        let l:width=256 " max
+      else
+        let l:width=winwidth(i)
+      endif
+      let l:range = join(range(1, l:width), ',')
+    endif
+    call setwinvar(i, '&colorcolumn', l:range)
+  endfor
+endfunction
+augroup DimInactiveWindows
+  au!
+  au WinEnter * call s:DimInactiveWindows()
+  au WinEnter * set cursorline
+  au WinLeave * set nocursorline
+augroup END
 
 
 " Strip trailing whitespace on save
@@ -262,13 +303,14 @@ let g:jedi#show_call_signatures=0
 "let g:jedi#auto_vim_configuration=0
 autocmd FileType python setlocal completeopt-=preview " disable the docstring window during completion
 
-
 " Plugins (with vim.plug) -------------------------------------------------------------
 
 " Load plugins
 call plug#begin('~/.vim/plugged')
 
 Plug 'ctrlpvim/ctrlp.vim'
+Plug '/usr/local/opt/fzf'
+Plug 'junegunn/fzf.vim'
 Plug 'scrooloose/nerdtree'
 Plug 'airblade/vim-gitgutter'
 Plug 'pangloss/vim-javascript'
@@ -320,6 +362,11 @@ augroup END
 
 " }}}
 
+" fzf
+nnoremap <silent> <leader>f :Files<CR>
+
+nnoremap <Leader>o :Agc<CR>
+command! -bang -nargs=* Agc call fzf#vim#ag(<q-args>, {'options': '--delimiter : --nth 4..'}, <bang>0)
 
 " Silver Searcher {{{
 augroup ag_config
@@ -341,6 +388,7 @@ augroup ag_config
     let b:ag_command = b:ag_command . ' --hidden -g ""'
     let g:ctrlp_user_command = b:ag_command
     let g:ctrlp_use_caching = 0
+    let $FZF_DEFAULT_COMMAND = 'ag -i -l'
   endif
 augroup END
 " }}}
