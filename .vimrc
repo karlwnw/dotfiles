@@ -18,6 +18,9 @@ set history=10000
 " Might decrease VIM responsiveness
 " set autoread
 
+" Activate persistent undo
+set undofile
+set undodir=~/.vim/undodir
 
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " => Files, backups and undo
