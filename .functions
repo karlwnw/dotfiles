@@ -1,8 +1,38 @@
 #!/bin/bash
 
+function randomstring(){
+  if [ $# -eq 0 ]
+    then
+      echo "Usage: randomstring <length>"
+    else
+      openssl rand $1 -base64 | cut -c1-$1
+  fi
+}
+
+# https://stackoverflow.com/a/30029855
+listening() {
+    if [ $# -eq 0 ]; then
+        sudo lsof -iTCP -sTCP:LISTEN -n -P
+    elif [ $# -eq 1 ]; then
+        sudo lsof -iTCP -sTCP:LISTEN -n -P | grep -i --color $1
+    else
+        echo "Usage: listening [pattern]"
+    fi
+}
+
+# fuzzy directory change with fzf
+function fcd() {
+    local dir
+    dir=$(find ${1:-.} -path '*/\.*' -prune -o -type d -print 2> /dev/null | fzf +m) && cd "$dir"
+}
+
 # Create a new directory and enter it
-function md() {
+function mcd() {
     mkdir -p "$@" && cd "$@"
+}
+
+backup() {
+    cp "$1"{,.bak};
 }
 
 # Print the wifi password (current connected wifi is no SSID provided)
@@ -26,6 +56,7 @@ function mousespeed() {
       defaults write -g com.apple.mouse.scaling $1
   fi
 }
+
 
 # Extract archives - use: extract <file>
 # Credits to http://dotfiles.org/~pseup/.bashrc
@@ -54,12 +85,13 @@ locationbyip() {
   curl -s https://ipinfo.io/loc
 }
 
-# who is using the laptop's iSight camera?
+# who is using the laptop's camera?
 camerausedby () {
   echo "Checking to see who is using the iSight camera… 📷"
   usedby=$(lsof | grep -w "AppleCamera\|USBVDC\|iSight" | awk '{printf $2"\n"}' | xargs ps)
   echo -e "Recent camera uses:\n$usedby"
 }
+
 
 flushdns() {
   sudo killall -HUP mDNSResponder;sudo killall mDNSResponderHelper;sudo dscacheutil -flushcache
@@ -67,4 +99,16 @@ flushdns() {
 
 serverpython() {
   python -m SimpleHTTPServer $1
+}
+
+
+# Outputs a pdf of a man page
+function pdfman() {
+    man -t ${1} | open -f -a /Applications/Preview.app
+}
+
+function swap()
+{
+    local TMPFILE=tmp.$$
+    mv "$1" $TMPFILE && mv "$2" "$1" && mv $TMPFILE "$2"
 }
