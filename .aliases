@@ -5,14 +5,34 @@ alias wifiname='wifiinfo | grep "[^B]SSID" | awk -F'\''SSID: '\'' '\''{print $2}
 alias wifioff='networksetup -setairportpower en0 off'
 alias wifion='networksetup -setairportpower en0 on'
 
-alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
+alias myip="curl https://ipinfo.io/ip"
 alias localip="ipconfig getifaddr en0"
 
-alias speedtest="wget -O /dev/null http://speed.transip.nl/100mb.bin"
+# Pretty print PATH
+alias prettypath='echo $PATH | tr -s ":" "\n"'
+
+# history with date
+alias h="fc -li -5000"
+
+alias changedfiles='find . -not -iwholename "*.git*" -type f -print0 | xargs -0 stat -f "%B %N" | sort -nr | cut -d " " -f2 | head -n 20'
+
+# URL-encode strings
+alias urlencode='python -c "import sys, urllib as ul; print ul.quote_plus(sys.argv[1]);"'
+
+# diff with suppressed new and unchanged lines
+# The input files content should be sorted for this to work
+# diff --new-line-format="" --unchanged-line-format="" <(sort file1) <(sort file2)
+alias ndiff='diff --new-line-format="" --unchanged-line-format=""'
 
 # Google Chrome
 alias chrome='/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
 alias canary='/Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary'
+
+# Start a fresh Firefox instance as a background job
+alias firefox="/Applications/Firefox.app/Contents/MacOS/firefox --new-instance --profile $(mktemp -d) &"
+
+# PyCharm
+alias pycharm='/Applications/PyCharm.app/Contents/MacOS/pycharm'
 
 # VSCode
 alias vscode='/Applications/Visual\ Studio\ Code.app/Contents/Resources/app/bin/code'
@@ -22,3 +42,10 @@ alias vlc='/Applications/VLC.app/Contents/MacOS/VLC'
 
 # iPhone Simulator
 alias iphonesimulator="open -a /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app"
+
+alias speedtest="wget -O /dev/null http://speed.transip.nl/100mb.bin"
+
+alias weather='curl -A "curl/7.35.0" wttr.in'
+
+# Copy my public key to clipboard
+alias pubkey="more ~/.ssh/id_rsa.pub | pbcopy | echo '=> Public key copied to clipboard'"
